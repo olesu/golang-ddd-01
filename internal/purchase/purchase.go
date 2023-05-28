@@ -29,7 +29,7 @@ type Purchase struct {
 	total              money.Money
 	PaymentMeans       payment.Means
 	timeOfPurchase     time.Time
-	cardToken          *string
+	CardToken          *string
 }
 
 func (p *Purchase) validateAndEnrich() error {
@@ -53,7 +53,14 @@ type Service struct {
 	cardService  CardChargeService
 	purchaseRepo Repository
 	storeService StoreService
-	repo         store.Repository
+}
+
+func NewService(cardService CardChargeService, purchaseRepo Repository, storeService StoreService) *Service {
+	return &Service{
+		cardService:  cardService,
+		purchaseRepo: purchaseRepo,
+		storeService: storeService,
+	}
 }
 
 func (s Service) CompletePurchase(ctx context.Context, purchase *Purchase, coffeeBuxCard *loyalty.CoffeeBux, storeID uuid.UUID) error {
@@ -65,7 +72,7 @@ func (s Service) CompletePurchase(ctx context.Context, purchase *Purchase, coffe
 	}
 	switch purchase.PaymentMeans {
 	case payment.MEANS_CARD:
-		if err := s.cardService.ChargeCard(ctx, purchase.total, *purchase.cardToken); err != nil {
+		if err := s.cardService.ChargeCard(ctx, purchase.total, *purchase.CardToken); err != nil {
 			return errors.New("card charge failed, cancelling purchase")
 		}
 	case payment.MEANS_CASH:
@@ -96,12 +103,4 @@ func (s Service) calculateStoreSpecificDiscount(ctx context.Context, storeID uui
 		purchase.total = *purchasePrice.Multiply(int64(100 - discount))
 	}
 	return nil
-}
-
-func (s Service) GetStoreSpecificDiscount(ctx context.Context, storeID uuid.UUID) (float32, error) {
-	dis, err := s.repo.GetStoreDiscount(ctx, storeID)
-	if err != nil {
-		return 0, err
-	}
-	return dis, nil
 }

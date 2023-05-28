@@ -15,6 +15,7 @@ var ErrNoDiscount = errors.New("no discount for store")
 
 type Repository interface {
 	GetStoreDiscount(ctx context.Context, storeID uuid.UUID) (float32, error)
+	Ping(ctx context.Context) error
 }
 
 type MongoRepository struct {
@@ -43,4 +44,11 @@ func (m MongoRepository) GetStoreDiscount(ctx context.Context, storeID uuid.UUID
 	}
 	return discount, nil
 
+}
+
+func (m MongoRepository) Ping(ctx context.Context) error {
+	if _, err := m.storeDiscounts.EstimatedDocumentCount(ctx); err != nil {
+		return fmt.Errorf("failed to ping DB: %w", err)
+	}
+	return nil
 }
