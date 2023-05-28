@@ -24,7 +24,7 @@ func main() {
 	cardToken := "tok_visa"
 
 	// This is the credentials for mongo if you run docker-compose up in this repo.
-	mongoConString := "mongodb://root:example@localhost:27017"
+	mongoConString := "mongodb://root:example@mongo:27017"
 	csvc, err := payment.NewStripeService(stripeTestAPIKey)
 	if err != nil {
 		log.Fatal(err)
