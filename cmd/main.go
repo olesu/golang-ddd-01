@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/Rhymond/go-money"
 	"github.com/google/uuid"
@@ -13,7 +14,7 @@ import (
 	"github.com/olesu/golang-ddd-01/internal/store"
 )
 
-func main() {
+func run() int {
 
 	ctx := context.Background()
 
@@ -27,23 +28,28 @@ func main() {
 	mongoConString := "mongodb://root:example@mongo:27017"
 	csvc, err := payment.NewStripeService(stripeTestAPIKey)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return 1
 	}
 
 	prepo, err := purchase.NewMongoRepo(ctx, mongoConString)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return 1
 	}
 	if err := prepo.Ping(ctx); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return 1
 	}
 
 	sRepo, err := store.NewMongoRepo(ctx, mongoConString)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return 1
 	}
 	if err := sRepo.Ping(ctx); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return 1
 	}
 
 	sSvc := store.NewService(sRepo)
@@ -64,8 +70,14 @@ func main() {
 		PaymentMeans: payment.MEANS_CARD,
 	}
 	if err := svc.CompletePurchase(ctx, pur, nil, someStoreID); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return 1
 	}
 
 	log.Println("purchase was successful")
+	return 0
+}
+
+func main() {
+	os.Exit(run())
 }
