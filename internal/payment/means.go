@@ -8,6 +8,6 @@ const (
 	MEANS_COFFEEBUX = "coffeebux"
 )
 
-type CardDetails struct {
-	cardToken string
-}
+// type CardDetails struct {
+// 	cardToken string
+// }
