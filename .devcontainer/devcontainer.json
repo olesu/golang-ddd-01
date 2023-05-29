@@ -3,7 +3,10 @@
 {
 	"name": "Go",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"dockerComposeFile": "../docker-compose.yaml",
+	"dockerComposeFile": [
+		"../docker-compose.yaml",
+		"docker-compose-extended.yaml"
+	],
 	"service": "devcontainer",
 	"shutdownAction": "stopCompose"
 	// "image": "mcr.microsoft.com/devcontainers/go:0-1.20"
