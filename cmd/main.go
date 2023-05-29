@@ -14,47 +14,20 @@ import (
 	"github.com/olesu/golang-ddd-01/internal/store"
 )
 
-func run() int {
+type appContext struct {
+	stripeService payment.StripeService
+	purchaseRepo  purchase.Repository
+	storeRepo     store.Repository
+}
 
-	ctx := context.Background()
-
-	// This is the test key from Stripe's documentation. Feel free to use it, no charges will actually be made.
-	stripeTestAPIKey := "sk_test_4eC39HqLyjWDarjtT1zdp7dc"
+func run(ctx context.Context, app appContext) int {
 
 	// This is a test token from Stripe's documentation. Feel free to use it, no charges will actually be made.
 	cardToken := "tok_visa"
 
-	// This is the credentials for mongo if you run docker-compose up in this repo.
-	mongoConString := "mongodb://root:example@mongo:27017"
-	csvc, err := payment.NewStripeService(stripeTestAPIKey)
-	if err != nil {
-		log.Println(err)
-		return 1
-	}
+	sSvc := store.NewService(app.storeRepo)
 
-	prepo, err := purchase.NewMongoRepo(ctx, mongoConString)
-	if err != nil {
-		log.Println(err)
-		return 1
-	}
-	if err := prepo.Ping(ctx); err != nil {
-		log.Println(err)
-		return 1
-	}
-
-	sRepo, err := store.NewMongoRepo(ctx, mongoConString)
-	if err != nil {
-		log.Println(err)
-		return 1
-	}
-	if err := sRepo.Ping(ctx); err != nil {
-		log.Println(err)
-		return 1
-	}
-
-	sSvc := store.NewService(sRepo)
-
-	svc := purchase.NewService(csvc, prepo, sSvc)
+	svc := purchase.NewService(app.stripeService, app.purchaseRepo, sSvc)
 
 	someStoreID := uuid.New()
 
@@ -79,5 +52,39 @@ func run() int {
 }
 
 func main() {
-	os.Exit(run())
+	ctx := context.Background()
+
+	// This is the test key from Stripe's documentation. Feel free to use it, no charges will actually be made.
+	stripeTestAPIKey := "sk_test_4eC39HqLyjWDarjtT1zdp7dc"
+
+	csvc, err := payment.NewStripeService(stripeTestAPIKey)
+	if err != nil {
+		log.Println(err)
+		log.Fatal(err)
+	}
+
+	// This is the credentials for mongo if you run docker-compose up in this repo.
+	mongoConString := "mongodb://root:example@mongo:27017"
+	prepo, err := purchase.NewMongoRepo(ctx, mongoConString)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := prepo.Ping(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	sRepo, err := store.NewMongoRepo(ctx, mongoConString)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := sRepo.Ping(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	app := appContext{
+		stripeService: csvc,
+		purchaseRepo:  prepo,
+		storeRepo:     sRepo,
+	}
+	os.Exit(run(ctx, app))
 }

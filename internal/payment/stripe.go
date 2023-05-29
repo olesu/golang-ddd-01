@@ -10,22 +10,26 @@ import (
 	"github.com/stripe/stripe-go/v73/client"
 )
 
-type StripeService struct {
+type StripeService interface {
+	ChargeCard(ctx context.Context, amount money.Money, cardToken string) error
+}
+
+type LiveStripeService struct {
 	stripeClient *client.API
 }
 
-func NewStripeService(apiKey string) (*StripeService, error) {
+func NewStripeService(apiKey string) (*LiveStripeService, error) {
 	if apiKey == "" {
 		return nil, errors.New("API key cannot be nil")
 	}
 	sc := &client.API{}
 	sc.Init(apiKey, nil)
-	return &StripeService{
+	return &LiveStripeService{
 		stripeClient: sc,
 	}, nil
 }
 
-func (s StripeService) ChargeCard(ctx context.Context, amount money.Money, cardToken string) error {
+func (s LiveStripeService) ChargeCard(ctx context.Context, amount money.Money, cardToken string) error {
 	params := &stripe.ChargeParams{
 		Amount:   stripe.Int64(amount.Amount()),
 		Currency: stripe.String(string(stripe.CurrencyUSD)),
